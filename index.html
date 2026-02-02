@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chick Run Adventure</title>
+  <style>
+    :root {
+      --sky: #87ceeb;
+      --grass: #7ec850;
+      --ground: #5b8e3e;
+      --ui: #1b2a1b;
+      --accent: #ffcf4a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: var(--sky);
+      color: #fff;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+      padding: 2rem;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .title {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 800;
+      color: #fff9c4;
+      text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 2.4vw, 1.5rem);
+      max-width: 640px;
+    }
+
+    .button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #4f3c0f;
+      cursor: pointer;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s ease;
+    }
+
+    .button:active {
+      transform: translateY(4px);
+    }
+
+    .hud {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-weight: 700;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .hud span {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.75rem;
+    }
+
+    .instruction {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game"></canvas>
+
+    <div id="start-screen" class="overlay">
+      <div class="title">Chick Run Adventure</div>
+      <div class="subtitle">
+        Tap or press Space/↑ to hop. Hold to flutter jump and collect corn kernels!
+      </div>
+      <div class="subtitle">Avoid puddles, cats, and farm gear. Grab boosts for speed or extra jump.</div>
+      <button id="start-button" class="button">Press Space / Tap to Start</button>
+    </div>
+
+    <div id="game-over" class="overlay hidden">
+      <div class="title">Farm Trouble!</div>
+      <div class="subtitle" id="final-score">Score: 0</div>
+      <div class="subtitle" id="high-score">High Score: 0</div>
+      <button id="restart-button" class="button">Run Again</button>
+    </div>
+
+    <div class="hud">
+      <span id="score">Score: 0</span>
+      <span id="boost">Boost: None</span>
+    </div>
+
+    <div class="instruction">Tap/Space: Jump · Hold: Flutter</div>
+  </div>
+
+  <script>
+    // Canvas setup (single-file GitHub Pages friendly)
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const startScreen = document.getElementById("start-screen");
+    const gameOverScreen = document.getElementById("game-over");
+    const startButton = document.getElementById("start-button");
+    const restartButton = document.getElementById("restart-button");
+    const scoreLabel = document.getElementById("score");
+    const boostLabel = document.getElementById("boost");
+    const finalScoreLabel = document.getElementById("final-score");
+    const highScoreLabel = document.getElementById("high-score");
+
+    const palette = {
+      sky: "#87ceeb",
+      grass: "#7ec850",
+      ground: "#5b8e3e",
+    };
+
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    const gameState = {
+      running: false,
+      started: false,
+      gameOver: false,
+      score: 0,
+      highScore: Number(localStorage.getItem("chickHighScore")) || 0,
+      speed: 4,
+      baseSpeed: 4,
+      difficultyTimer: 0,
+      spawnTimer: 0,
+      powerTimer: 0,
+      jumpBoostTimer: 0,
+      speedBoostTimer: 0,
+      groundY: 0,
+      time: 0,
+    };
+
+    const inputState = {
+      jumpHeld: false,
+      jumpQueued: false,
+    };
+
+    const chick = {
+      x: 120,
+      y: 0,
+      width: 50,
+      height: 40,
+      velocityY: 0,
+      onGround: true,
+      runCycle: 0,
+    };
+
+    const obstacles = [];
+    const corns = [];
+    const particles = [];
+    const powerUps = [];
+
+    const layers = [
+      { offset: 0, speed: 0.2, color: "#cfefff", height: 0.25 },
+      { offset: 0, speed: 0.4, color: "#9dd28f", height: 0.35 },
+      { offset: 0, speed: 0.7, color: "#7abf63", height: 0.45 },
+    ];
+
+    const cloudBank = Array.from({ length: 6 }).map((_, index) => ({
+      x: index * 280,
+      y: 40 + (index % 3) * 30,
+      speed: 0.3 + (index % 2) * 0.1,
+      size: 50 + (index % 3) * 10,
+    }));
+
+    const obstacleTypes = [
+      { type: "puddle", width: 60, height: 18, color: "#4aa3df" },
+      { type: "gear", width: 50, height: 50, color: "#b5651d" },
+      { type: "cat", width: 60, height: 35, color: "#6b4f3b" },
+      { type: "gap", width: 80, height: 26, color: "#2d1b10" },
+    ];
+
+    const powerTypes = [
+      { type: "speed", label: "Speed Boost", color: "#ff8c42" },
+      { type: "jump", label: "Jump Boost", color: "#9b5de5" },
+    ];
+
+    function resize() {
+      const ratio = window.devicePixelRatio || 1;
+      viewport.width = window.innerWidth;
+      viewport.height = window.innerHeight;
+      canvas.width = viewport.width * ratio;
+      canvas.height = viewport.height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      gameState.groundY = viewport.height * 0.78;
+      chick.y = gameState.groundY - chick.height;
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    function resetGame() {
+      gameState.running = true;
+      gameState.gameOver = false;
+      gameState.score = 0;
+      gameState.speed = gameState.baseSpeed;
+      gameState.difficultyTimer = 0;
+      gameState.spawnTimer = 0;
+      gameState.powerTimer = 0;
+      gameState.jumpBoostTimer = 0;
+      gameState.speedBoostTimer = 0;
+      chick.y = gameState.groundY - chick.height;
+      chick.velocityY = 0;
+      chick.onGround = true;
+      obstacles.length = 0;
+      corns.length = 0;
+      particles.length = 0;
+      powerUps.length = 0;
+      boostLabel.textContent = "Boost: None";
+      gameOverScreen.classList.add("hidden");
+      startScreen.classList.add("hidden");
+    }
+
+    function startGame() {
+      if (!gameState.running) {
+        gameState.started = true;
+        resetGame();
+      }
+    }
+
+    function handleJump() {
+      if (chick.onGround) {
+        chick.velocityY = -12;
+        chick.onGround = false;
+        inputState.jumpQueued = false;
+      }
+    }
+
+    function applyBoosts() {
+      if (gameState.speedBoostTimer > 0) {
+        gameState.speed = gameState.baseSpeed + 2;
+        gameState.speedBoostTimer -= 1;
+        boostLabel.textContent = "Boost: Speed!";
+      } else {
+        gameState.speed = gameState.baseSpeed;
+      }
+
+      if (gameState.jumpBoostTimer > 0) {
+        boostLabel.textContent =
+          gameState.speedBoostTimer > 0 ? "Boost: Speed + Jump" : "Boost: Jump!";
+        gameState.jumpBoostTimer -= 1;
+      }
+
+      if (gameState.jumpBoostTimer <= 0 && gameState.speedBoostTimer <= 0) {
+        boostLabel.textContent = "Boost: None";
+      }
+    }
+
+    function spawnObstacle() {
+      const pick = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+      const groundY = gameState.groundY;
+      const obstacle = {
+        ...pick,
+        x: viewport.width + 40,
+        y: pick.type === "gap" ? groundY + 10 : groundY - pick.height,
+      };
+      obstacles.push(obstacle);
+    }
+
+    function spawnCorn() {
+      corns.push({
+        x: viewport.width + 30,
+        y: gameState.groundY - 80 - Math.random() * 120,
+        radius: 10,
+        collected: false,
+      });
+    }
+
+    function spawnPowerUp() {
+      const pick = powerTypes[Math.floor(Math.random() * powerTypes.length)];
+      powerUps.push({
+        ...pick,
+        x: viewport.width + 50,
+        y: gameState.groundY - 120 - Math.random() * 100,
+        radius: 14,
+      });
+    }
+
+    function update(delta) {
+      if (!gameState.running) return;
+
+      gameState.time += delta;
+      gameState.difficultyTimer += delta;
+      gameState.spawnTimer += delta;
+      gameState.powerTimer += delta;
+
+      if (gameState.difficultyTimer > 4000) {
+        gameState.baseSpeed = Math.min(9, gameState.baseSpeed + 0.3);
+        gameState.difficultyTimer = 0;
+      }
+
+      applyBoosts();
+
+      if (gameState.spawnTimer > 900) {
+        spawnObstacle();
+        if (Math.random() > 0.4) {
+          spawnCorn();
+        }
+        gameState.spawnTimer = 0;
+      }
+
+      if (gameState.powerTimer > 5200) {
+        spawnPowerUp();
+        gameState.powerTimer = 0;
+      }
+
+      if (inputState.jumpQueued) {
+        handleJump();
+      }
+
+      const gravity = 0.45;
+      const flutterGravity = 0.2;
+      const effectiveGravity =
+        inputState.jumpHeld && chick.velocityY < 0 ? flutterGravity : gravity;
+
+      chick.velocityY += effectiveGravity;
+      chick.y += chick.velocityY;
+
+      if (chick.y >= gameState.groundY - chick.height) {
+        chick.y = gameState.groundY - chick.height;
+        chick.velocityY = 0;
+        chick.onGround = true;
+      }
+
+      chick.runCycle += delta * 0.015;
+
+      obstacles.forEach((obstacle) => {
+        obstacle.x -= gameState.speed * 1.5;
+      });
+
+      corns.forEach((corn) => {
+        corn.x -= gameState.speed * 1.5;
+      });
+
+      powerUps.forEach((powerUp) => {
+        powerUp.x -= gameState.speed * 1.5;
+      });
+
+      particles.forEach((particle) => {
+        particle.x -= gameState.speed * 0.8;
+        particle.y += particle.vy;
+        particle.life -= delta;
+      });
+
+      for (let i = obstacles.length - 1; i >= 0; i -= 1) {
+        if (obstacles[i].x + obstacles[i].width < -50) {
+          obstacles.splice(i, 1);
+        }
+      }
+
+      for (let i = corns.length - 1; i >= 0; i -= 1) {
+        if (corns[i].x + corns[i].radius < -30) {
+          corns.splice(i, 1);
+        }
+      }
+
+      for (let i = powerUps.length - 1; i >= 0; i -= 1) {
+        if (powerUps[i].x + powerUps[i].radius < -30) {
+          powerUps.splice(i, 1);
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i -= 1) {
+        if (particles[i].life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      checkCollisions();
+
+      gameState.score += delta * 0.02 * gameState.speed;
+      scoreLabel.textContent = `Score: ${Math.floor(gameState.score)}`;
+    }
+
+    function checkCollisions() {
+      const chickHitbox = {
+        x: chick.x + 6,
+        y: chick.y + 6,
+        width: chick.width - 12,
+        height: chick.height - 10,
+      };
+
+      const hit = obstacles.some((obstacle) => {
+        if (obstacle.type === "gap") {
+          return (
+            chickHitbox.y + chickHitbox.height >= gameState.groundY - 4 &&
+            chickHitbox.x + chickHitbox.width > obstacle.x &&
+            chickHitbox.x < obstacle.x + obstacle.width
+          );
+        }
+        return (
+          chickHitbox.x < obstacle.x + obstacle.width &&
+          chickHitbox.x + chickHitbox.width > obstacle.x &&
+          chickHitbox.y < obstacle.y + obstacle.height &&
+          chickHitbox.y + chickHitbox.height > obstacle.y
+        );
+      });
+
+      if (hit) {
+        endGame();
+      }
+
+      corns.forEach((corn) => {
+        if (corn.collected) return;
+        const dx = chick.x + chick.width / 2 - corn.x;
+        const dy = chick.y + chick.height / 2 - corn.y;
+        if (Math.hypot(dx, dy) < corn.radius + 18) {
+          corn.collected = true;
+          gameState.score += 25;
+          spawnParticles(corn.x, corn.y, "#ffcf4a");
+        }
+      });
+
+      powerUps.forEach((powerUp) => {
+        const dx = chick.x + chick.width / 2 - powerUp.x;
+        const dy = chick.y + chick.height / 2 - powerUp.y;
+        if (Math.hypot(dx, dy) < powerUp.radius + 18) {
+          if (powerUp.type === "speed") {
+            gameState.speedBoostTimer = 300;
+          } else {
+            gameState.jumpBoostTimer = 300;
+          }
+          spawnParticles(powerUp.x, powerUp.y, powerUp.color);
+          powerUp.collected = true;
+        }
+      });
+
+      for (let i = powerUps.length - 1; i >= 0; i -= 1) {
+        if (powerUps[i].collected) {
+          powerUps.splice(i, 1);
+        }
+      }
+    }
+
+    function spawnParticles(x, y, color) {
+      for (let i = 0; i < 12; i += 1) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -Math.random() * 2,
+          life: 500 + Math.random() * 300,
+          color,
+        });
+      }
+    }
+
+    function endGame() {
+      gameState.running = false;
+      gameState.gameOver = true;
+      finalScoreLabel.textContent = `Score: ${Math.floor(gameState.score)}`;
+      if (gameState.score > gameState.highScore) {
+        gameState.highScore = Math.floor(gameState.score);
+        localStorage.setItem("chickHighScore", gameState.highScore);
+      }
+      highScoreLabel.textContent = `High Score: ${gameState.highScore}`;
+      gameOverScreen.classList.remove("hidden");
+    }
+
+    function drawBackground(delta) {
+      ctx.fillStyle = palette.sky;
+      ctx.fillRect(0, 0, viewport.width, viewport.height);
+
+      cloudBank.forEach((cloud) => {
+        cloud.x -= cloud.speed * (delta / 16);
+        if (cloud.x < -80) {
+          cloud.x = viewport.width + 80;
+        }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.beginPath();
+        ctx.ellipse(cloud.x, cloud.y, cloud.size, cloud.size * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      layers.forEach((layer, index) => {
+        layer.offset -= gameState.speed * layer.speed * (delta / 16);
+        if (layer.offset < -viewport.width) {
+          layer.offset += viewport.width;
+        }
+        ctx.fillStyle = layer.color;
+        const layerHeight = viewport.height * layer.height;
+        ctx.fillRect(layer.offset, viewport.height - layerHeight, viewport.width, layerHeight);
+        ctx.fillRect(layer.offset + viewport.width, viewport.height - layerHeight, viewport.width, layerHeight);
+        if (index === layers.length - 1) {
+          ctx.fillStyle = palette.grass;
+          ctx.fillRect(0, gameState.groundY, viewport.width, viewport.height - gameState.groundY);
+          ctx.fillStyle = palette.ground;
+          ctx.fillRect(0, gameState.groundY + 18, viewport.width, viewport.height - gameState.groundY);
+        }
+      });
+    }
+
+    function drawChick() {
+      ctx.save();
+      ctx.translate(chick.x, chick.y);
+
+      // Body
+      ctx.fillStyle = "#ffeb69";
+      ctx.beginPath();
+      ctx.ellipse(chick.width / 2, chick.height / 2, chick.width / 2, chick.height / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wing flap animation
+      const wingOffset = Math.sin(chick.runCycle) * 6;
+      ctx.fillStyle = "#ffd24a";
+      ctx.beginPath();
+      ctx.ellipse(18, 22 + wingOffset, 12, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.arc(32, 16, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Beak
+      ctx.fillStyle = "#ff9f1c";
+      ctx.beginPath();
+      ctx.moveTo(44, 22);
+      ctx.lineTo(56, 18);
+      ctx.lineTo(54, 28);
+      ctx.closePath();
+      ctx.fill();
+
+      // Legs
+      ctx.strokeStyle = "#d47c26";
+      ctx.lineWidth = 3;
+      const legSwing = Math.sin(chick.runCycle * 2) * 6;
+      ctx.beginPath();
+      ctx.moveTo(20, 38);
+      ctx.lineTo(16 + legSwing, 46);
+      ctx.moveTo(32, 38);
+      ctx.lineTo(28 - legSwing, 46);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawObstacles() {
+      obstacles.forEach((obstacle) => {
+        ctx.fillStyle = obstacle.color;
+        if (obstacle.type === "puddle") {
+          ctx.beginPath();
+          ctx.ellipse(obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2, obstacle.width / 2, obstacle.height / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (obstacle.type === "cat") {
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(obstacle.x + 10, obstacle.y + 8, 8, 8);
+          ctx.fillRect(obstacle.x + 32, obstacle.y + 8, 8, 8);
+        } else if (obstacle.type === "gap") {
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        } else {
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+          ctx.fillStyle = "#ffd166";
+          ctx.fillRect(obstacle.x + 8, obstacle.y + 8, obstacle.width - 16, obstacle.height - 16);
+        }
+      });
+    }
+
+    function drawCorn() {
+      corns.forEach((corn) => {
+        if (corn.collected) return;
+        ctx.fillStyle = "#ffd166";
+        ctx.beginPath();
+        ctx.ellipse(corn.x, corn.y, corn.radius, corn.radius * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#ff9f1c";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(corn.x - 4, corn.y - 6);
+        ctx.lineTo(corn.x - 2, corn.y + 6);
+        ctx.moveTo(corn.x + 4, corn.y - 6);
+        ctx.lineTo(corn.x + 2, corn.y + 6);
+        ctx.stroke();
+      });
+    }
+
+    function drawPowerUps() {
+      powerUps.forEach((powerUp) => {
+        ctx.fillStyle = powerUp.color;
+        ctx.beginPath();
+        ctx.arc(powerUp.x, powerUp.y, powerUp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(powerUp.type === "speed" ? "S" : "J", powerUp.x, powerUp.y + 4);
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach((particle) => {
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = Math.max(0, particle.life / 800);
+        ctx.beginPath();
+        ctx.arc(particle.x + particle.vx * 4, particle.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    function render(delta) {
+      drawBackground(delta);
+      drawCorn();
+      drawPowerUps();
+      drawObstacles();
+      drawChick();
+      drawParticles();
+    }
+
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+      const delta = timestamp - lastTime;
+      lastTime = timestamp;
+      update(delta);
+      render(delta);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function handleInputStart() {
+      inputState.jumpHeld = true;
+      inputState.jumpQueued = true;
+      if (!gameState.started) {
+        startGame();
+      }
+    }
+
+    function handleInputEnd() {
+      inputState.jumpHeld = false;
+    }
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        event.preventDefault();
+        handleInputStart();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        handleInputEnd();
+      }
+    });
+
+    canvas.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      handleInputStart();
+    });
+
+    canvas.addEventListener("touchend", (event) => {
+      event.preventDefault();
+      handleInputEnd();
+    });
+
+    canvas.addEventListener("mousedown", handleInputStart);
+    canvas.addEventListener("mouseup", handleInputEnd);
+
+    startButton.addEventListener("click", startGame);
+    restartButton.addEventListener("click", startGame);
+
+    highScoreLabel.textContent = `High Score: ${gameState.highScore}`;
+
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
