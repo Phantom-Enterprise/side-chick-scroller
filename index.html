@@ -648,6 +648,9 @@
             keys['Space'] = false;
         });
 
+        startBtn.onclick = startGame;
+        restartBtn.onclick = restartGame;
+
         function startGame() {
             gameState = 'PLAYING';
             startScreen.classList.add('hidden');
