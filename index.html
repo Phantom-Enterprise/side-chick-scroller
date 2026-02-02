@@ -6,18 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chick Run Adventure</title>
     <style>
-        :root {
-            --primary-yellow: #FFD700;
-            --primary-orange: #FF8C00;
-            --sky-blue: #87CEEB;
-            --grass-green: #7CFC00;
-            --white: #ffffff;
-            --dark: #333333;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-        @font-face {
-            font-family: 'Outfit';
-            src: url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
+        :root {
+            --neon-pink: #FF2D95;
+            --neon-cyan: #00FBFF;
+            --neon-purple: #9D00FF;
+            --neon-orange: #FF8C00;
+            --dark-blue: #05052D;
+            --sun-yellow: #FFD700;
+            --sun-orange: #FF4D00;
         }
 
         body,
@@ -27,8 +25,8 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--sky-blue);
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--dark-blue);
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -40,6 +38,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background: radial-gradient(circle at 50% 50%, #1a1a4a 0%, #05052d 100%);
         }
 
         canvas {
@@ -61,11 +60,12 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            color: var(--white);
+            background: rgba(5, 5, 45, 0.8);
+            backdrop-filter: blur(4px);
+            color: white;
             z-index: 10;
             transition: opacity 0.3s ease;
+            text-shadow: 2px 2px 0px var(--neon-purple);
         }
 
         .hidden {
@@ -75,54 +75,63 @@
         }
 
         h1 {
-            font-size: 5rem;
-            margin: 0;
-            color: var(--primary-yellow);
-            text-shadow:
-                0 1px 0 #ccc,
-                0 2px 0 #c9c9c9,
-                0 3px 0 #bbb,
-                0 4px 0 #b9b9b9,
-                0 5px 0 #aaa,
-                0 6px 1px rgba(0, 0, 0, .1),
-                0 0 5px rgba(0, 0, 0, .1),
-                0 1px 3px rgba(0, 0, 0, .3),
-                0 3px 5px rgba(0, 0, 0, .2),
-                0 5px 10px rgba(0, 0, 0, .25),
-                0 10px 10px rgba(0, 0, 0, .2),
-                0 20px 20px rgba(0, 0, 0, .15);
+            font-size: 3rem;
+            margin: 20px 0;
+            color: var(--neon-cyan);
             text-transform: uppercase;
-            letter-spacing: 8px;
-            animation: float 3s infinite ease-in-out;
+            letter-spacing: 4px;
+            animation: glitch 2s infinite;
+            text-shadow:
+                3px 3px 0px var(--neon-pink),
+                -3px -3px 0px var(--neon-purple);
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0) rotate(-2deg);
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+                text-shadow: 3px 3px 0px var(--neon-pink), -3px -3px 0px var(--neon-purple);
             }
 
-            50% {
-                transform: translateY(-30px) rotate(2deg);
+            20% {
+                transform: translate(-2px, 2px);
+                text-shadow: -3px 0 var(--neon-cyan), 3px 0 var(--neon-pink);
+            }
+
+            40% {
+                transform: translate(-2px, -2px);
+                text-shadow: 2px -2px var(--neon-pink), -2px 2px var(--neon-cyan);
+            }
+
+            60% {
+                transform: translate(2px, 2px);
+                text-shadow: 2px 2px var(--neon-pink), -2px -2px var(--neon-cyan);
+            }
+
+            80% {
+                transform: translate(2px, -2px);
+                text-shadow: -2px -2px var(--neon-pink), 2px 2px var(--neon-cyan);
+            }
+
+            100% {
+                transform: translate(0);
+                text-shadow: 3px 3px 0px var(--neon-pink), -3px -3px 0px var(--neon-purple);
             }
         }
 
         .btn {
-            background: linear-gradient(180deg, #FFD700 0%, #FF8C00 100%);
-            color: white;
-            border: 4px solid white;
-            padding: 1.5rem 4rem;
-            font-size: 2rem;
-            font-weight: 800;
-            border-radius: 20px;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 4px solid var(--neon-cyan);
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-family: 'Press Start 2P', cursive;
             cursor: pointer;
-            box-shadow: 0 10px 25px rgba(255, 140, 0, 0.4);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow:
+                0 0 10px var(--neon-cyan),
+                inset 0 0 10px var(--neon-cyan);
+            transition: all 0.2s;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
+            margin-top: 30px;
         }
 
         .btn::after {
@@ -137,13 +146,11 @@
             transition: 0.5s;
         }
 
-        .btn:hover::after {
-            left: 100%;
-        }
-
         .btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 15px 35px rgba(255, 140, 0, 0.6);
+            background: var(--neon-cyan);
+            color: var(--dark-blue);
+            box-shadow: 0 0 30px var(--neon-cyan);
+            transform: scale(1.05);
         }
 
         .btn:active {
@@ -165,25 +172,23 @@
         }
 
         .score-box {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            padding: 10px 20px;
-            border-radius: 15px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--neon-pink);
+            padding: 10px 15px;
+            color: var(--neon-cyan);
+            font-size: 0.8rem;
+            box-shadow: 0 0 10px var(--neon-pink);
         }
 
         .score-val {
-            color: var(--primary-yellow);
-            margin-left: 5px;
+            color: white;
+            margin-left: 10px;
         }
 
         #game-over-screen h2 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            color: var(--neon-pink);
+            margin-bottom: 20px;
         }
 
         .stats {
@@ -192,18 +197,17 @@
         }
 
         .stats p {
-            font-size: 1.8rem;
-            margin: 0.5rem 0;
+            font-size: 1rem;
+            margin: 15px 0;
         }
 
         .instructions {
             position: absolute;
             bottom: 40px;
-            font-size: 1.2rem;
-            opacity: 0.8;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 10px 20px;
-            border-radius: 10px;
+            font-size: 0.7rem;
+            color: var(--neon-cyan);
+            text-align: center;
+            line-height: 2;
         }
 
         #mobile-controls {
@@ -218,7 +222,7 @@
 
         @media (max-width: 768px) {
             h1 {
-                font-size: 2.5rem;
+                font-size: 1.8rem;
             }
 
             #mobile-controls {
@@ -226,8 +230,12 @@
             }
 
             .btn {
-                padding: 1rem 2rem;
-                font-size: 1.2rem;
+                padding: 15px 25px;
+                font-size: 0.8rem;
+            }
+
+            .score-box {
+                font-size: 0.6rem;
             }
         }
     </style>
@@ -321,7 +329,6 @@
                 this.vy += CONFIG.GRAVITY;
                 this.y += this.vy;
 
-                // Ground collision
                 const groundY = canvas.height - CONFIG.GROUND_HEIGHT - this.height;
                 if (this.y > groundY) {
                     this.y = groundY;
@@ -329,7 +336,6 @@
                     this.isJumping = false;
                 }
 
-                // Animation
                 this.animationFrame += 0.2;
                 if (this.isJumping) {
                     this.rotation = Math.min(this.vy * 0.05, 0.4);
@@ -340,49 +346,36 @@
 
             draw() {
                 ctx.save();
-                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-                ctx.rotate(this.rotation);
+                ctx.translate(this.x, this.y);
 
                 // Glow if powered up
                 if (activePowerUps.speed > 0 || activePowerUps.jump > 0) {
                     ctx.shadowBlur = 20;
-                    ctx.shadowColor = activePowerUps.speed > 0 ? '#00FFFF' : '#FF00FF';
+                    ctx.shadowColor = activePowerUps.speed > 0 ? '#00FBFF' : '#FF2D95';
                 }
 
-                // Body
-                ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.ellipse(0, 0, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#E6C200';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                // Pixel Body (Blocky)
+                ctx.fillStyle = '#FFD700'; // Neon Yellow
+                ctx.fillRect(8, 8, 24, 24);
+                ctx.fillRect(4, 12, 32, 16);
+                ctx.fillRect(12, 4, 16, 32);
 
-                // Eye
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(12, -8, 5, 0, Math.PI * 2);
-                ctx.fill();
+                // Eye / Shades
                 ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.arc(14, -8, 2, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(20, 10, 12, 4); // Cool Shades
+                ctx.fillStyle = '#00FBFF';
+                ctx.fillRect(22, 11, 2, 2); // Lens glint
 
                 // Beak
                 ctx.fillStyle = '#FF8C00';
-                ctx.beginPath();
-                ctx.moveTo(18, 0);
-                ctx.lineTo(28, 5);
-                ctx.lineTo(18, 10);
-                ctx.fill();
+                ctx.fillRect(32, 16, 8, 4);
+                ctx.fillRect(32, 14, 4, 2);
 
-                // Wing
+                // Pixel Wing
                 ctx.fillStyle = '#FFE44D';
-                const wingY = Math.sin(this.animationFrame * 2) * 5;
-                ctx.beginPath();
-                ctx.ellipse(-10, wingY, 12, 8, -Math.PI / 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
+                const wingY = Math.floor(Math.sin(this.animationFrame * 2) * 4);
+                ctx.fillRect(4, 16 + wingY, 12, 8);
+                ctx.fillRect(2, 18 + wingY, 12, 4);
 
                 ctx.restore();
             }
@@ -399,7 +392,7 @@
         // Obstacle Class
         class Obstacle {
             constructor(type) {
-                this.type = type; // puddle, equipment, cat, gap
+                this.type = type;
                 this.width = 50;
                 this.height = 50;
                 this.x = canvas.width + 100;
@@ -426,130 +419,80 @@
             draw() {
                 ctx.save();
                 if (this.type === 'puddle') {
-                    ctx.fillStyle = '#4D94FF';
-                    ctx.beginPath();
-                    ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#3385FF';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    ctx.fillStyle = '#00FBFF'; // Neon Cyan Puddle
+                    ctx.fillRect(this.x, this.y + 5, this.width, 10);
+                    ctx.fillRect(this.x + 10, this.y, this.width - 20, 20);
                 } else if (this.type === 'equipment') {
-                    ctx.fillStyle = '#CC3333';
+                    // Arcade style tractor
+                    ctx.fillStyle = '#FF2D95'; // Neon Pink
                     ctx.fillRect(this.x, this.y, this.width, this.height);
-                    ctx.fillStyle = '#333';
-                    ctx.beginPath();
-                    ctx.arc(this.x + 15, this.y + this.height, 15, 0, Math.PI * 2);
-                    ctx.arc(this.x + this.width - 15, this.y + this.height, 15, 0, Math.PI * 2);
-                    ctx.fill();
-                    // Cabin
-                    ctx.fillStyle = '#87CEEB';
-                    ctx.fillRect(this.x + 10, this.y + 10, this.width - 20, 30);
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(this.x + 5, this.y + 55, 20, 20);
+                    ctx.fillRect(this.x + 45, this.y + 55, 20, 20);
                 } else if (this.type === 'cat') {
-                    ctx.fillStyle = '#FF9933';
-                    // Simple cat body
-                    ctx.fillRect(this.x, this.y + 10, this.width, this.height - 10);
-                    // Head
-                    ctx.fillRect(this.x, this.y, 25, 25);
-                    // Ears
-                    ctx.beginPath();
-                    ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + 5, this.y - 10); ctx.lineTo(this.x + 10, this.y);
-                    ctx.moveTo(this.x + 15, this.y); ctx.lineTo(this.x + 20, this.y - 10); ctx.lineTo(this.x + 25, this.y);
-                    ctx.fill();
-                    // Tail
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = '#FF9933';
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + this.width, this.y + 20);
-                    ctx.quadraticCurveTo(this.x + this.width + 20, this.y, this.x + this.width + 10, this.y - 20);
-                    ctx.stroke();
+                    ctx.fillStyle = '#9D00FF'; // Neon Purple Cat
+                    ctx.fillRect(this.x, this.y + 10, this.width, 20); // Body
+                    ctx.fillRect(this.x, this.y, 25, 25); // Head
+                    ctx.fillStyle = '#00FBFF';
+                    ctx.fillRect(this.x + 5, this.y + 8, 4, 4); // Eyes
+                    ctx.fillRect(this.x + 15, this.y + 8, 4, 4);
                 }
                 ctx.restore();
             }
         }
 
-        // Collectible Class (Corn)
+        // Corn (Pixel style)
         class Corn {
             constructor() {
                 this.width = 20;
                 this.height = 20;
                 this.x = canvas.width + 100;
                 this.y = canvas.height - CONFIG.GROUND_HEIGHT - 100 - Math.random() * 150;
-                this.angle = 0;
                 this.collected = false;
             }
 
             update() {
                 this.x -= (activePowerUps.speed > 0 ? gameSpeed * 1.5 : gameSpeed);
-                this.angle += 0.1;
             }
 
             draw() {
                 if (this.collected) return;
-                ctx.save();
-                ctx.translate(this.x + 10, this.y + 10);
-                ctx.rotate(Math.sin(this.angle) * 0.2);
-
-                // Yellow grain
                 ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.ellipse(0, 0, 8, 12, 0, 0, Math.PI * 2);
-                ctx.fill();
-                // Husks
-                ctx.strokeStyle = '#32CD32';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(-5, 10); ctx.quadraticCurveTo(-10, 0, -5, -10);
-                ctx.moveTo(5, 10); ctx.quadraticCurveTo(10, 0, 5, -10);
-                ctx.stroke();
-
-                ctx.restore();
+                ctx.fillRect(this.x + 4, this.y, 12, 20);
+                ctx.fillRect(this.x, this.y + 4, 20, 12);
+                ctx.fillStyle = '#FF8C00';
+                ctx.fillRect(this.x + 8, this.y + 4, 4, 4);
+                ctx.fillRect(this.x + 8, this.y + 12, 4, 4);
             }
         }
 
-        // PowerUp Class
+        // PowerUp
         class PowerUp {
             constructor(type) {
-                this.type = type; // speed, jump
+                this.type = type;
                 this.width = 30;
                 this.height = 30;
                 this.x = canvas.width + 100;
                 this.y = canvas.height - CONFIG.GROUND_HEIGHT - 200 - Math.random() * 100;
                 this.collected = false;
-                this.angle = 0;
             }
 
             update() {
                 this.x -= (activePowerUps.speed > 0 ? gameSpeed * 1.5 : gameSpeed);
-                this.angle += 0.05;
             }
 
             draw() {
                 if (this.collected) return;
-                ctx.save();
-                ctx.translate(this.x + 15, this.y + 15);
-                ctx.rotate(this.angle);
-
-                // Orb
-                const color = this.type === 'speed' ? '#00FFFF' : '#FF00FF';
+                const color = this.type === 'speed' ? '#00FBFF' : '#FF2D95';
                 ctx.fillStyle = color;
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 10;
                 ctx.shadowColor = color;
-                ctx.beginPath();
-                ctx.arc(0, 0, 15, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Inner Symbol
+                ctx.fillRect(this.x, this.y, 30, 30);
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 20px Outfit';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(this.type === 'speed' ? 'S' : 'J', 0, 0);
-
-                ctx.restore();
+                ctx.fillText(this.type === 'speed' ? 'S' : 'J', this.x + 8, this.y + 22);
             }
         }
 
-        // Particle System
         class Particle {
             constructor(x, y, color) {
                 this.x = x;
@@ -558,27 +501,20 @@
                 this.vx = (Math.random() - 0.5) * 10;
                 this.vy = (Math.random() - 0.5) * 10;
                 this.life = 1.0;
-                this.size = Math.random() * 8 + 2;
             }
-
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.life -= 0.02;
+                this.life -= 0.05;
             }
-
             draw() {
-                ctx.save();
-                ctx.globalAlpha = this.life;
                 ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+                ctx.globalAlpha = this.life;
+                ctx.fillRect(this.x, this.y, 6, 6);
+                ctx.globalAlpha = 1;
             }
         }
 
-        // Background Layers
         class BackgroundLayer {
             constructor(color, speedModifier, height, yOffset = 0) {
                 this.color = color;
@@ -587,66 +523,64 @@
                 this.yOffset = yOffset;
                 this.x = 0;
             }
-
             update() {
                 const effectiveSpeed = activePowerUps.speed > 0 ? gameSpeed * 1.5 : gameSpeed;
                 this.x = (this.x - effectiveSpeed * this.speedModifier) % canvas.width;
             }
-
             draw() {
                 ctx.fillStyle = this.color;
-                // Draw two copies for seamless loop
                 ctx.fillRect(this.x, canvas.height - this.height - this.yOffset, canvas.width + 2, this.height);
                 ctx.fillRect(this.x + canvas.width, canvas.height - this.height - this.yOffset, canvas.width + 2, this.height);
             }
         }
 
-        // Hill style layer
-        class HillLayer extends BackgroundLayer {
+        class PalmLayer extends BackgroundLayer {
             draw() {
                 ctx.fillStyle = this.color;
-                this.drawHills(this.x);
-                this.drawHills(this.x + canvas.width);
+                this.drawPalms(this.x);
+                this.drawPalms(this.x + canvas.width);
             }
-
-            drawHills(startX) {
-                ctx.beginPath();
-                ctx.moveTo(startX, canvas.height);
-                for (let i = 0; i <= 10; i++) {
-                    const x = startX + (i * canvas.width / 10);
-                    const y = canvas.height - this.height - Math.sin(i * 1.5 + this.x * 0.01) * 20 - this.yOffset;
-                    ctx.lineTo(x, y);
+            drawPalms(startX) {
+                for (let i = 0; i < 3; i++) {
+                    const px = startX + (i * canvas.width / 3) + 50;
+                    const py = canvas.height - this.height - this.yOffset;
+                    // Trunk
+                    ctx.fillRect(px, py - 100, 10, 100);
+                    // Leaves (blocky)
+                    ctx.fillRect(px - 30, py - 110, 70, 10);
+                    ctx.fillRect(px - 10, py - 120, 30, 10);
                 }
-                ctx.lineTo(startX + canvas.width, canvas.height);
-                ctx.fill();
             }
         }
 
-        class Cloud {
+        class NeonGrid {
             constructor() {
-                this.reset();
-                this.x = Math.random() * canvas.width;
+                this.offset = 0;
             }
-
-            reset() {
-                this.x = canvas.width + 200;
-                this.y = Math.random() * (canvas.height / 2);
-                this.size = Math.random() * 40 + 20;
-                this.speed = Math.random() * 0.5 + 0.2;
-            }
-
             update() {
-                this.x -= this.speed;
-                if (this.x + 200 < 0) this.reset();
+                const effectiveSpeed = activePowerUps.speed > 0 ? gameSpeed * 1.5 : gameSpeed;
+                this.offset = (this.offset + effectiveSpeed) % 40;
             }
-
             draw() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.arc(this.x + this.size * 0.8, this.y - this.size * 0.4, this.size * 0.7, 0, Math.PI * 2);
-                ctx.arc(this.x + this.size * 1.5, this.y, this.size * 0.9, 0, Math.PI * 2);
-                ctx.fill();
+                const groundY = canvas.height - CONFIG.GROUND_HEIGHT;
+                ctx.strokeStyle = '#FF2D95';
+                ctx.lineWidth = 2;
+
+                // Horizontal lines
+                for (let i = 0; i <= CONFIG.GROUND_HEIGHT; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, groundY + i);
+                    ctx.lineTo(canvas.width, groundY + i);
+                    ctx.stroke();
+                }
+
+                // Vanishing point perspective lines
+                for (let i = -canvas.width; i < canvas.width * 2; i += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2, groundY - 100);
+                    ctx.lineTo(i - this.offset, canvas.height);
+                    ctx.stroke();
+                }
             }
         }
 
@@ -657,10 +591,10 @@
         let powerups = [];
         let particles = [];
         let layers = [];
-        let clouds = [];
         let nextSpawnTime = 0;
         let nextCornTime = 0;
         let nextPowerUpTime = 5000;
+        let neonGrid;
 
         function init() {
             resize();
@@ -669,7 +603,7 @@
             corns = [];
             powerups = [];
             particles = [];
-            clouds = Array.from({ length: 5 }, () => new Cloud());
+            neonGrid = new NeonGrid();
             score = 0;
             gameSpeed = CONFIG.SPEED_START;
             distance = 0;
@@ -677,10 +611,9 @@
             scoreEl.innerText = '0';
 
             layers = [
-                new HillLayer('#BDE4A7', 0.05, 300, 100), // Far hills
-                new HillLayer('#95D5B2', 0.1, 200, 50), // Mid hills
-                new HillLayer('#52B788', 0.3, 150, 20), // Close hills
-                new BackgroundLayer('#2D6A4F', 1, CONFIG.GROUND_HEIGHT) // Ground
+                new BackgroundLayer('#1a1a4a', 0, canvas.height), // Sky floor
+                new PalmLayer('#0D0D2D', 0.1, 100, 50), // Far silhouettes
+                new PalmLayer('#151545', 0.4, 80, 20), // Closer
             ];
         }
 
@@ -729,9 +662,9 @@
         function gameOver() {
             gameState = 'GAMEOVER';
             gameOverScreen.classList.remove('hidden');
-            finalScoreEl.innerText = score;
+            finalScoreEl.innerText = Math.floor(score);
             if (score > highScore) {
-                highScore = score;
+                highScore = Math.floor(score);
                 localStorage.setItem('chickRunHighScore', highScore);
                 highScoreEl.innerText = highScore;
             }
@@ -763,22 +696,18 @@
         function update(time) {
             if (gameState !== 'PLAYING') return;
 
-            // Speed progression
             gameSpeed = Math.min(CONFIG.SPEED_MAX, gameSpeed + CONFIG.SPEED_INC);
             distance += (activePowerUps.speed > 0 ? gameSpeed * 1.5 : gameSpeed);
 
-            // Power-up timers
             if (activePowerUps.speed > 0) activePowerUps.speed -= 16.6;
             if (activePowerUps.jump > 0) activePowerUps.jump -= 16.6;
 
             player.isFluttering = keys['Space'] || keys['ArrowUp'];
             player.update();
 
-            // Backgrounds & Clouds
             layers.forEach(layer => layer.update());
-            clouds.forEach(cloud => cloud.update());
+            neonGrid.update();
 
-            // Obstacles
             if (time > nextSpawnTime) {
                 spawnObstacle();
                 nextSpawnTime = time + CONFIG.SPAWN_INTERVAL / (gameSpeed / 5) + Math.random() * 1000;
@@ -794,7 +723,6 @@
                 }
             });
 
-            // Corns
             if (time > nextCornTime) {
                 spawnCorn();
                 nextCornTime = time + 1000 + Math.random() * 2000;
@@ -805,8 +733,7 @@
                 if (!corn.collected && checkCollision(player, corn)) {
                     corn.collected = true;
                     score += 10;
-                    scoreEl.innerText = score;
-                    // Sparkles
+                    scoreEl.innerText = Math.floor(score);
                     for (let i = 0; i < 8; i++) {
                         particles.push(new Particle(corn.x + 10, corn.y + 10, '#FFD700'));
                     }
@@ -816,7 +743,6 @@
                 }
             });
 
-            // Powerups
             if (time > nextPowerUpTime) {
                 spawnPowerUp();
                 nextPowerUpTime = time + 10000 + Math.random() * 15000;
@@ -827,8 +753,7 @@
                 if (!pu.collected && checkCollision(player, pu)) {
                     pu.collected = true;
                     activePowerUps[pu.type] = CONFIG.POWERUP_DURATION;
-                    // Effect particles
-                    const color = pu.type === 'speed' ? '#00FFFF' : '#FF00FF';
+                    const color = pu.type === 'speed' ? '#00FBFF' : '#FF2D95';
                     for (let i = 0; i < 15; i++) {
                         particles.push(new Particle(pu.x + 15, pu.y + 15, color));
                     }
@@ -838,7 +763,6 @@
                 }
             });
 
-            // Particles
             particles.forEach((p, index) => {
                 p.update();
                 if (p.life <= 0) particles.splice(index, 1);
@@ -848,21 +772,28 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Sky Gradient
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#87CEEB');
-            grad.addColorStop(1, '#E0F6FF');
+            // Retro Sun Background
+            const sunY = canvas.height / 2;
+            const sunRadius = 150;
+            const grad = ctx.createLinearGradient(0, sunY - sunRadius, 0, sunY + sunRadius);
+            grad.addColorStop(0, '#FFD700');
+            grad.addColorStop(1, '#FF4D00');
             ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Sun
-            ctx.fillStyle = 'rgba(255, 255, 200, 0.5)';
             ctx.beginPath();
-            ctx.arc(canvas.width - 100, 100, 50, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, sunY, sunRadius, 0, Math.PI, true);
             ctx.fill();
 
-            clouds.forEach(cloud => cloud.draw());
+            // Sun horizontal scanlines
+            ctx.fillStyle = '#05052D';
+            for (let i = 0; i < 20; i++) {
+                const y = sunY - (i * 8);
+                if (y > sunY - sunRadius) {
+                    ctx.fillRect(canvas.width / 2 - sunRadius, y, sunRadius * 2, 2);
+                }
+            }
+
             layers.forEach(layer => layer.draw());
+            neonGrid.draw();
 
             corns.forEach(corn => corn.draw());
             powerups.forEach(pu => pu.draw());
@@ -870,36 +801,33 @@
             player.draw();
             particles.forEach(p => p.draw());
 
-            // Power-up indicators
             if (activePowerUps.speed > 0 || activePowerUps.jump > 0) {
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.fillRect(20, 80, 200, activePowerUps.speed > 0 && activePowerUps.jump > 0 ? 80 : 40);
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(20, 80, 400, activePowerUps.speed > 0 && activePowerUps.jump > 0 ? 80 : 40);
 
                 let y = 105;
+                ctx.font = '12px "Press Start 2P"';
                 if (activePowerUps.speed > 0) {
-                    ctx.fillStyle = '#00FFFF';
-                    ctx.font = '16px Outfit';
-                    ctx.fillText('SPEED BOOST: ' + (activePowerUps.speed / 1000).toFixed(1) + 's', 30, y);
+                    ctx.fillStyle = '#00FBFF';
+                    ctx.fillText('SPEED BOOST: ' + (activePowerUps.speed / 1000).toFixed(1) + 'S', 30, y);
                     y += 30;
                 }
                 if (activePowerUps.jump > 0) {
-                    ctx.fillStyle = '#FF00FF';
-                    ctx.font = '16px Outfit';
-                    ctx.fillText('JUMP BOOST: ' + (activePowerUps.jump / 1000).toFixed(1) + 's', 30, y);
+                    ctx.fillStyle = '#FF2D95';
+                    ctx.fillText('JUMP BOOST: ' + (activePowerUps.jump / 1000).toFixed(1) + 'S', 30, y);
                 }
             }
 
-            // Instructions hint if just started
             if (distance < 500) {
                 ctx.fillStyle = 'white';
-                ctx.font = '24px Outfit';
+                ctx.font = '14px "Press Start 2P"';
                 ctx.textAlign = 'center';
-                ctx.fillText('TAP / SPACE TO JUMP', canvas.width / 2, canvas.height / 2 - 100);
+                ctx.fillText('SPACE / TAP TO JUMP', canvas.width / 2, canvas.height / 2 - 120);
             }
         }
 
-        function loop(time) {
-            update(time);
+        function loop(timestamp) {
+            update(timestamp);
             draw();
             requestAnimationFrame(loop);
         }
@@ -907,6 +835,7 @@
         init();
         requestAnimationFrame(loop);
     </script>
+
 
 
 </body>
