@@ -280,7 +280,9 @@
             SPEED_INC: 0.001,
             SPAWN_INTERVAL: 1500,
             GROUND_HEIGHT: 100,
-            POWERUP_DURATION: 5000
+            POWERUP_DURATION: 5000,
+            GROWTH_MAX: 2.5,
+            GROWTH_INC: 0.1
         };
 
         let gameState = 'START'; // START, PLAYING, GAMEOVER
@@ -297,15 +299,19 @@
         // Player Class
         class Chick {
             constructor() {
+                this.baseWidth = 40;
+                this.baseHeight = 40;
                 this.width = 40;
                 this.height = 40;
                 this.x = 100;
                 this.y = canvas.height - CONFIG.GROUND_HEIGHT - this.height;
                 this.vy = 0;
                 this.isJumping = false;
+                this.jumpCount = 0;
                 this.isFluttering = false;
                 this.rotation = 0;
                 this.animationFrame = 0;
+                this.growthScale = 1.0;
             }
 
             update() {
@@ -321,6 +327,7 @@
                     this.y = groundY;
                     this.vy = 0;
                     this.isJumping = false;
+                    this.jumpCount = 0;
                 }
 
                 this.animationFrame += 0.2;
@@ -334,6 +341,7 @@
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+                ctx.scale(this.growthScale, this.growthScale);
 
                 // Pixel Body (Blocky)
                 ctx.fillStyle = '#FFD700'; // Neon Yellow
@@ -362,10 +370,21 @@
             }
 
             jump() {
-                if (!this.isJumping) {
+                if (this.jumpCount < 2) {
                     const power = activePowerUps.jump > 0 ? CONFIG.JUMP_FORCE * 1.4 : CONFIG.JUMP_FORCE;
                     this.vy = power;
                     this.isJumping = true;
+                    this.jumpCount++;
+                }
+            }
+            
+            grow() {
+                if (this.growthScale < CONFIG.GROWTH_MAX) {
+                    this.growthScale += CONFIG.GROWTH_INC;
+                    this.width = this.baseWidth * this.growthScale;
+                    this.height = this.baseHeight * this.growthScale;
+                    // Slightly adjust Y to prevent falling through floor during growth
+                    this.y -= this.baseHeight * CONFIG.GROWTH_INC;
                 }
             }
         }
@@ -733,6 +752,7 @@
                     corn.collected = true;
                     score += 10;
                     scoreEl.innerText = Math.floor(score);
+                    player.grow();
                     for (let i = 0; i < 8; i++) {
                         particles.push(new Particle(corn.x + 10, corn.y + 10, '#FFD700'));
                     }
